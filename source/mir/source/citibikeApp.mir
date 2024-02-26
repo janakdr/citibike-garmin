@@ -1,0 +1,57 @@
+[ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 1; ]
+import Toybox.Application;
+[ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 2; ]
+import Toybox.Lang;
+[ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 3; ]
+import Toybox.WatchUi;
+[ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 5; ]
+class citibikeApp extends Application.AppBase{
+    [ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 5; ]
+    <init> {
+    }
+    [ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 5; ]
+    static
+    <init> {
+    }
+    [ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 7; ]
+    function initialize() as Void {
+_Users_janakr_garmin_dev_citibike_source_citibikeApp_mc_7_26_9_4_start:
+[ "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc" 8 8 ]
+        %tmp.2 = getv ? :AppBase;
+        %tmp.3 = getv function %tmp.2 :initialize;
+        invoke %tmp.2 %tmp.3();
+_Users_janakr_garmin_dev_citibike_source_citibikeApp_mc_7_26_9_4_stop:
+    }
+    [ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 12; ]
+    function onStart(state as Dictionary or Null) as Void {
+    }
+    [ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 16; ]
+    function onStop(state as Dictionary or Null) as Void {
+    }
+    [ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 36; ]
+    function getInitialView() as [Views] or [Views, InputDelegates] {
+_Users_janakr_garmin_dev_citibike_source_citibikeApp_mc_36_68_38_4_start:
+[ "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc" 37 8 ]
+        %tmp.1 = newa 1;
+        %tmp.5 = getv ? :citibikeView;
+        %tmp.2 = newc %tmp.5 ();
+        %tmp.6 = dup %tmp.1;
+        %tmp.7 = aputv %tmp.6 0 %tmp.2;
+        ret %tmp.7;
+_Users_janakr_garmin_dev_citibike_source_citibikeApp_mc_36_68_38_4_stop:
+    }
+}
+[ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 42; ]
+function getApp() as citibikeApp {
+_Users_janakr_garmin_dev_citibike_source_citibikeApp_mc_42_33_44_0_start:
+[ "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc" 43 4 ]
+    %tmp.1 = getm $.Toybox.Application;
+    %tmp.2 = getv function %tmp.1 :getApp;
+    %tmp.3 = invoke %tmp.1 %tmp.2();
+    %tmp.4 = as %tmp.3 citibikeApp;
+    ret %tmp.4;
+_Users_janakr_garmin_dev_citibike_source_citibikeApp_mc_42_33_44_0_stop:
+}
+[ @file = "/Users/janakr/garmin-dev/citibike/source/citibikeApp.mc"; @line = 1; ]
+<init> {
+}
