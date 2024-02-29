@@ -12,6 +12,7 @@ class CitibikeGlance extends WatchUi.GlanceView {
   function initialize() {
       GlanceView.initialize();
       _station_status = [];
+      System.println("Initialized glance " + me);
   }
 
     (:glance)
@@ -88,7 +89,7 @@ class CitibikeGlance extends WatchUi.GlanceView {
   // loading resources into memory.
   (:glance)
   function onShow() as Void {
-    System.println("Shwoing");
+    System.println("Shwoing glance " + me);
     handleFetch(Storage.getValue("C"), Storage.getValue("E"));
     // _fetcher.onShow(method(:handleFetch));
   }
@@ -96,7 +97,7 @@ class CitibikeGlance extends WatchUi.GlanceView {
   // Update the view
   (:glance)
   function onUpdate(dc as Dc) as Void {
-      System.println("Updating with " + _station_status.size());
+      Toybox.System.println("Updating glance " + me);
       dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
       dc.clear();
       if (_station_status.size() == 0) {
@@ -127,25 +128,38 @@ class CitibikeGlance extends WatchUi.GlanceView {
         }
         var background;
         if (station.ebikes != null) {
-          background = 0xFFFFFF * Abbreviate.min(station.ebikes, 5) / 5;
+          var scalar = Abbreviate.min(station.ebikes, 5) / 5;
+          background = scalar ;
         } else {
           background = 0x000000;
         }
-        var len = name.length() / 2;
-        if (len == 0 && station.bikes != null) {
-          len = 1;
+        var len;
+        if (station.bikes == null || station.docks == null) {
+          len = name.length();
+        } else {
+          len = name.length() / 2;
+          if (len == 0 && station.bikes != null) {
+            len = 1;
+          }
         }
-        if (len > 0) {
+        var start = 0;
+        if (station.bikes != null) {
           dc.setColor(colorForNumber(station.bikes), background);
-          var text = name.substring(0, len);
+          var text = name.substring(start, len);
+          dc.drawText(startX, startY, Graphics.FONT_XTINY, text, Graphics.TEXT_JUSTIFY_LEFT);
+          startX += dc.getTextWidthInPixels(text, Graphics.FONT_XTINY);
+          start = len;
+        }
+        if (station.docks != null) {
+          dc.setColor(colorForNumber(station.docks), background);
+          var text = name.substring(start, null);
           dc.drawText(startX, startY, Graphics.FONT_XTINY, text, Graphics.TEXT_JUSTIFY_LEFT);
           startX += dc.getTextWidthInPixels(text, Graphics.FONT_XTINY);
         }
-        if (len < name.length()) {
-          dc.setColor(colorForNumber(station.docks), background);
-          var text = name.substring(len, null);
-          dc.drawText(startX, startY, Graphics.FONT_XTINY, text, Graphics.TEXT_JUSTIFY_LEFT);
-          startX += dc.getTextWidthInPixels(text, Graphics.FONT_XTINY);
+        if (i < _station_status.size() - 1) {
+          dc.setColor(0xFFFFFF, 0x000000);
+          dc.drawText(startX, startY, Graphics.FONT_XTINY, ",", Graphics.TEXT_JUSTIFY_LEFT);
+          startX += dc.getTextWidthInPixels(",", Graphics.FONT_XTINY);
         }
       }
       // var pretext = "hi";

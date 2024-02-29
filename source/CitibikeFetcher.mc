@@ -3,21 +3,21 @@ import Toybox.Lang;
 import Toybox.System;
 
 class CitibikeFetcher {
-    (:glance)
+    (:background)
     public static var internalStationType = "_internal_station_type";
 
     (:background)
     private var _contexts as Array<LocationFavorite>;
 
-    (:glance)
+    (:background)
     static class LocationFavorite {
-        (:glance)
+        (:background)
         var pickupStations as Dictionary<String, String>;
-        (:glance)
+        (:background)
         var dropoffStations as Dictionary<String, String>;
-        (:glance)
+        (:background)
         var stationOrder as Dictionary<String, Number>;
-        (:glance)
+        (:background)
         var area as Zone;
 
       function initialize(pickups as Dictionary<String, String>,
@@ -33,7 +33,7 @@ class CitibikeFetcher {
       }
     }
 
-    (:glance)
+    (:background)
     static class ResponseContextWithFavorite {
         (:glance)
         var locationContext as LocationFavorite;
@@ -46,15 +46,15 @@ class CitibikeFetcher {
         }
     }
 
-    (:glance)
+    (:background)
     static class Zone {
-        (:glance)
+        (:background)
         var bottom as Float;
-        (:glance)
+        (:background)
         var top as Float;
-        (:glance)
+        (:background)
         var left as Float;
-        (:glance)
+        (:background)
         var right as Float;
 
       function initialize(b as Float, t as Float, l as Float, r as Float) {
@@ -64,7 +64,7 @@ class CitibikeFetcher {
         right = r;
       }
 
-      (:glance)
+      (:background)
       function inside(degrees as Array<Double>) {
         return bottom <= degrees[0] && degrees[0] <= top && left <= degrees[1] && degrees[1] <= right;
       }
@@ -271,17 +271,34 @@ class CitibikeFetcher {
   };
 
   function initialize() {
-      var c1 = new LocationFavorite({"66db3f62-0aca-11e7-82f6-3863bb44ef7c" => "M&S"}, {"66db88f5-0aca-11e7-82f6-3863bb44ef7c" => "W&L",
-      "66dbea8d-0aca-11e7-82f6-3863bb44ef7c" => "W&D"}, ["M&S", "W&L", "W&D"],
+      var c1 = new LocationFavorite({"66db3f62-0aca-11e7-82f6-3863bb44ef7c" => "M&S"}, {"66db88f5-0aca-11e7-82f6-3863bb44ef7c" => "L&W",
+      "66dbea8d-0aca-11e7-82f6-3863bb44ef7c" => "D&W"}, ["M&S", "L&W", "D&W"],
       new Zone(40.69013, 40.69642, -73.98942, -73.97257));
       _contexts = [c1]; // new Array<LocationFavorite>[1];
   }
 
-  (:glance)
-  static function onResponseNoFavorite(responseCode as Number,
-          response as Dictionary, callback) as Void {
+  (:background)
+  function setCache(cache as Array<Dictionary<String, String or Number>> or Null, error as String or Null) as Void {
+      System.println("Setting cache " + cache);
+      Storage.setValue("T", Toybox.Time.now().value());
+      if (cache != null) {
+          Storage.setValue("C", cache);
+          Storage.deleteValue("E");
+      } else {
+          Storage.deleteValue("C");
+          Storage.setValue("E", error);
+      }
+  }
+
+  (:background)
+  function onResponseNoFavorite(responseCode as Number,
+          response as Dictionary or Null, callback) as Void {
     if (responseCode != 200) {
-      callback.invoke(null, responseCode + ": " + response);
+      var error = responseCode + ": " + response;
+      me.setCache(null, error);
+      if (callback != null) {
+        callback.invoke(null, error);
+      }
       return;
     }
     var dd = response["data"] as Dictionary<String, Array<Dictionary>>;
@@ -294,14 +311,26 @@ class CitibikeFetcher {
     //   }
     //   _text += abbreviatedName(station["name"]) + ": " + station["num_bikes_available"] + "-" + station["num_docks_available"];
     // }
-    callback.invoke(stations, null);
+    me.setCache(stations, null);
+    if (callback != null) {
+        callback.invoke(stations, null);
+    }
   }
 
-  (:glance)
-  static function onResponse(responseCode as Number,
-          response as Dictionary, responseContext as ResponseContextWithFavorite) as Void {
+  (:background)
+  function testResponse(responseCode as Number, response as Dictionary or Null) as Void {
+    System.println("Tested " + responseCode + ", " + response);
+  }
+
+  (:background)
+  function onResponse(responseCode as Number,
+          response as Dictionary or Null, responseContext as ResponseContextWithFavorite) as Void {
     if (responseCode != 200) {
-      responseContext.callback.invoke(null, responseCode + ": " + response);
+      var error = responseCode + ": " + response;
+      me.setCache(null, error);
+      if (responseContext.callback != null) {
+        responseContext.callback.invoke(null, error);
+      }
       return;
     }
     var dd = response["data"] as Dictionary<String, Array<Dictionary>>;
@@ -322,17 +351,19 @@ class CitibikeFetcher {
       }
       var ind = context.stationOrder[station["name"]];
       if (ind == null) {
-        Toybox.System.error("Null index for " + station);
+        reordered_stations.add(station);
       } else {
         reordered_stations[ind] = station;
       }
     }
-    responseContext.callback.invoke(reordered_stations, null);
+    me.setCache(reordered_stations, null);
+    if (responseContext.callback != null) {
+        responseContext.callback.invoke(reordered_stations, null);
+    }
   }
 
-  (:glance)
+  (:background)
   function onPosition(info as Toybox.Position.Info, callback) as Void {
-    System.println("positioning");
     var position = info.position;
     var context = null;
     if (position == null) {
@@ -346,17 +377,11 @@ class CitibikeFetcher {
         }
       }
     }
-    var options = {                                             // set the options
-        :method => Communications.HTTP_REQUEST_METHOD_GET,      // set HTTP method
-        :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON,
-        :headers => {"Accept-Encoding" => "gzip"},
-    };
     var responseCallback;
-    var query;
+    var degrees = position.toDegrees();
+    var query = "?latitude=" + degrees[0] + "&longitude=" + degrees[1];
     if (context != null) {
       responseCallback = method(:onResponse);
-      options[:context] = new ResponseContextWithFavorite(context, callback);
-      query = null;
       for (var k = 0; k < 2; k++) {
         var keys;
         if (k == 0) {
@@ -365,56 +390,38 @@ class CitibikeFetcher {
           keys = context.dropoffStations.keys();
         }
         for (var i = 0; i < keys.size(); i++) {
-          if (query == null) {
-            query = "?";
-          } else {
-            query += "&";
-          }
-          query += "station=" + keys[i];
+          query += "&station=" + keys[i];
         }
       }
+      context = new ResponseContextWithFavorite(context, callback);
     } else {
       responseCallback = method(:onResponseNoFavorite);
-      options[:context] = callback;
-      var degrees = position.toDegrees();
-      query = "?latitude=" + degrees[0] + "&longitude=" + degrees[1];
-      // onResponseNoFavorite(200, staticData, callback);
+      context = callback;
     }
-    System.println("https://citibike-filter-la7kubovaa-uc.a.run.app" + query);
-    Communications.makeWebRequest(
-        // "https://gbfs.lyft.com/gbfs/2.3/bkn/en/station_status.json", 
-        // "https://8080-cs-84506072222-default.cs-us-east1-pkhd.cloudshell.dev",
-        // "https://gbfs.citibikenyc.com/gbfs/2.3/gbfs.json",
-        "https://citibike-filter-la7kubovaa-uc.a.run.app" + query,
-        {}, options, responseCallback);
+    new MakeWebRequest(context, responseCallback).call("https://citibike-filter-la7kubovaa-uc.a.run.app" + query);
+    // Communications.makeWebRequest(
+    //     // "https://gbfs.lyft.com/gbfs/2.3/bkn/en/station_status.json", 
+    //     // "https://8080-cs-84506072222-default.cs-us-east1-pkhd.cloudshell.dev",
+    //     // "https://gbfs.citibikenyc.com/gbfs/2.3/gbfs.json",
+    //     "https://citibike-filter-la7kubovaa-uc.a.run.app" + query,
+    //     {}, options, responseCallback);
+    // inf = Toybox.Time.Gregorian.info(Toybox.Time.now(), Toybox.Time.FORMAT_MEDIUM);
+    // System.println(inf.hour + ":" + inf.min + ":" + inf.sec + " Made request");
   }
 
   // Called when this View is brought to the foreground. Restore
   // the state of this View and prepare it to be shown. This includes
   // loading resources into memory.
-  (:glance)
+  (:background)
   function onShow(callback) as Void {
     // Position.enableLocationEvents({:acquisitionType => Position.LOCATION_ONE_SHOT}, method(:onPosition));
     onPosition(Position.getInfo(), callback);
   }
 
     (:background)
-    function setCache(cache as Array<Dictionary<String, String or Number>>, error as String) as Void {
-        System.println("Setting cache " + cache.size());
-        Storage.setValue("T", Toybox.Time.now().value());
-        if (cache != null) {
-            Storage.setValue("C", cache);
-            Storage.deleteValue("E");
-        } else {
-            Storage.deleteValue("C");
-            Storage.setValue("E", error);
-        }
-    }
-
-    (:background)
     function fetch() as Void {
         System.println("Fetching");
-        onShow(method(:setCache));
+        onShow(null);
     }
 }
 

@@ -79,7 +79,6 @@ class Abbreviate {
 
     static function fairlyAbbreviate(arr as Array<String>, len as Number) as Void {
         var cutoffAndSurplus = findFairAbbreviationLength(arr, len);
-        Toybox.System.println("Got abbrev " + cutoffAndSurplus + " for " + arr + " and " + len);
         for (var i = 0; i < arr.size(); i++) {
             if (arr[i].length() > cutoffAndSurplus[0]) {
                 var c = cutoffAndSurplus[0];
@@ -100,6 +99,9 @@ class Abbreviate {
           segments.add(name.substring(start, start + ind));
           start += ind + 1;
           ind = name.substring(start, null).find(" ");
+        }
+        if (start < name.length()) {
+          segments.add(name.substring(start, null));
         }
         name = "";
         for (var i = 0; i < segments.size(); i++) {
