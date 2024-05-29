@@ -35,15 +35,15 @@ class CitibikeView extends WatchUi.View {
     WatchUi.requestUpdate();
   }
 
-  // Called when this View is brought to the foreground. Restore
-  // the state of this View and prepare it to be shown. This includes
-  // loading resources into memory.
-  function onShow() as Void {
-    _fetcher.onShow(method(:handleFetch));
-    Toybox.System.println("Done with fetcher view " + me);
-    handleFetch(Storage.getValue("C"), Storage.getValue("E"));
-    Toybox.System.println("Done with handle " + me);
-  }
+    // Called when this View is brought to the foreground. Restore
+    // the state of this View and prepare it to be shown. This includes
+    // loading resources into memory.
+    function onShow() as Void {
+        _fetcher.onShow();
+        Toybox.System.println("Done with fetcher view " + me);
+        handleFetch(Storage.getValue("C"), Storage.getValue("E"));
+        Toybox.System.println("Done with handle " + me);
+    }
 
     // Update the view
     function onUpdate(dc as Dc) as Void {

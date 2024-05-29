@@ -128,8 +128,8 @@ class CitibikeGlance extends WatchUi.GlanceView {
         }
         var background;
         if (station.ebikes != null) {
-          var scalar = Abbreviate.min(station.ebikes, 5) / 5;
-          background = scalar ;
+          var scalar = Abbreviate.min(station.ebikes, 5) / 5.0;
+          background = scalar * 0xFFFFFF;
         } else {
           background = 0x000000;
         }

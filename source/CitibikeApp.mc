@@ -38,6 +38,18 @@ class CitibikeApp extends Application.AppBase {
         _fetcher.fetch();
     }
 
+    (:background)
+    function callFetchView() as Void {
+        System.println("Fetching in view");
+        _fetcher.fetch();
+    }
+
+    (:background)
+    function callFetchGlance() as Void {
+        System.println("Fetching in glance");
+        _fetcher.fetch();
+    }
+
     function showView() as Void {
         System.println("Showing view");
         _view.onShow();
@@ -86,7 +98,7 @@ class CitibikeApp extends Application.AppBase {
         if (!_timerStarted) {
             System.println("timer started");
             _timerStarted = true;
-            var callback = method(:callFetch);
+            var callback = method(:callFetchView);
             new Timer.Timer().start(callback, 30000, true);
             // callFetch();
         }
@@ -96,12 +108,11 @@ class CitibikeApp extends Application.AppBase {
 
     (:glance)
     function getGlanceView() {
-        System.println("Glance view " + me);
         callFetch();
         if (!_timerStarted) {
             System.println("timer started");
             _timerStarted = true;
-            var callback = method(:callFetch);
+            var callback = method(:callFetchGlance);
             new Timer.Timer().start(callback, 30000, true);
             // callFetch();
         }
