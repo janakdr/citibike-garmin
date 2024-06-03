@@ -4,12 +4,21 @@ import Toybox.Lang;
 import Toybox.WatchUi;
 
 class CitibikeView extends WatchUi.View {
-  private var _text as String;
+  private var _error_text as String;
+  private var _text as Array<String>;
   private var _fetcher as CitibikeFetcher;
+  private var _xCoords as Array<String>;
+  private var _charCounts as Array<String>;
+  private var _heightOffset as Number or Null;
+  private var _textHeight as Number or Null;
+  private var _pixelsPerChar as Number or Null;
+  private static var _minChars as Number = 22;
 
   function initialize(fetcher as CitibikeFetcher) {
     View.initialize();
     me._fetcher = fetcher;
+    me._xCoords = new Array<String>();
+    me._charCounts = new Array<String>();
     _text = "Loading...";
     Toybox.System.println("Initialized view " + me);
   }
@@ -17,19 +26,39 @@ class CitibikeView extends WatchUi.View {
     // Load your resources here
     function onLayout(dc as Dc) as Void {
         setLayout(Rez.Layouts.MainLayout(dc));
+        var textSize = dc.getTextDimensions("W", Graphics.FONT_XTINY);
+        me._textHeight = textSize[1];
+        var pixelsPerChar = textSize[0];
+        var pixelsForMinCharBy2 = pixelsPerChar *  22 / 2;
+        var radius2 = Math.pow(dc.getHeight() / 2, 2);
+        var widthBy2 = dc.getWidth() / 2;
+        var height = Math.sqrt(radius2 - Math.pow(pixelsForMinCharBy2, 2))
+        var me._heightOffset = dc.getHeight() - height;
+        while (true) {
+          var width = Math.sqrt(radius2 - Math.pow(height, 2));
+          if (width < pixelsForMinCharBy2) {
+            break;
+          }
+          me._xCoords.add(widthBy2 - width);
+          me._charCounts.add(2 * width / pixelsPerChar)
+          height = height - me._textHeight;
+        }
     }
 
   function handleFetch(stations as Array<Dictionary>, error as String) {
-    _text = "";
+    me._error_text = "";
+    me._text = new Array<String>();
     if (stations == null) {
-      _text = error;
+      me._error_text = error;
       return;
     }
     for (var i = 0; i < stations.size(); i++) {
-      if (i > 0) {
-        _text += "\n";
+      if (i >= me._xCoords.size()) {
+        // Watch display can't show more than 9 lines.
+        break;
       }
       var station = stations[i];
+
       _text += Abbreviate.abbreviatedName(station["name"], 15) + ": " + station["num_bikes_available"] + "-" + station["num_docks_available"] + "-" + station["num_ebikes_available"];
     }
     WatchUi.requestUpdate();
@@ -39,7 +68,10 @@ class CitibikeView extends WatchUi.View {
     // the state of this View and prepare it to be shown. This includes
     // loading resources into memory.
     function onShow() as Void {
-        _fetcher.onShow();
+        _fetcher.fetch();
+        // Start background thread. It will be ended after 40 minutes.
+        Storage.setValue("L", Toybox.Time.now().value());
+        Background.registerForTemporalEvent(new Time.Duration(5 * 60));
         Toybox.System.println("Done with fetcher view " + me);
         handleFetch(Storage.getValue("C"), Storage.getValue("E"));
         Toybox.System.println("Done with handle " + me);

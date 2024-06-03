@@ -109,20 +109,7 @@ class CitibikeFetcher {
     }
     var dd = response["data"] as Dictionary<String, Array<Dictionary>>;
     var stations = dd["stations"];
-    // _text = "";
-    // for (var i = 0; i < stations.size(); i++) {
-    //   var station = stations[i];
-    //   if (i > 0) {
-    //     _text += "\n";
-    //   }
-    //   _text += abbreviatedName(station["name"]) + ": " + station["num_bikes_available"] + "-" + station["num_docks_available"];
-    // }
     me.setCache(stations, responseContext.position, null);
-  }
-
-  (:background)
-  function testResponse(responseCode as Number, response as Dictionary or Null) as Void {
-    System.println("Tested " + responseCode + ", " + response);
   }
 
   (:background)
@@ -160,7 +147,7 @@ class CitibikeFetcher {
   }
 
   (:background)
-  function onPosition(info as Toybox.Position.Info) as Void {
+  function doFetch(info as Toybox.Position.Info) as Void {
     var position = info.position;
     var favorite = null;
     if (position == null) {
@@ -205,19 +192,11 @@ class CitibikeFetcher {
     // System.println(inf.hour + ":" + inf.min + ":" + inf.sec + " Made request");
   }
 
-  // Called when this View is brought to the foreground. Restore
-  // the state of this View and prepare it to be shown. This includes
-  // loading resources into memory.
-  (:background)
-  function onShow() as Void {
-    // Position.enableLocationEvents({:acquisitionType => Position.LOCATION_ONE_SHOT}, method(:onPosition));
-    onPosition(Position.getInfo());
-  }
-
     (:background)
     function fetch() as Void {
         System.println("Fetching");
-        onShow();
+        // Position.enableLocationEvents({:acquisitionType => Position.LOCATION_ONE_SHOT}, method(:doFetch));
+        doFetch(Position.getInfo());
     }
 }
 

@@ -21,7 +21,7 @@ class CitibikeApp extends Application.AppBase {
         // Storage.clearValues();
         _fetcher = new CitibikeFetcher();
         // System.println("Initialize");
-        Background.registerForTemporalEvent(new Time.Duration(5 * 60));
+        // Background.registerForTemporalEvent(new Time.Duration(5 * 60));
         // var lastFetch = Storage.getValue("T");
         // if (lastFetch == null || Time.now().subtract(new Time.Moment(lastFetch.toNumber())).value() > 60) {
         //     _fetcher.fetch();
